@@ -13,7 +13,7 @@ export default function Navbar() {
             NextJS Test App
           </Link>
           <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-            v1.1.0
+            v1.2.0
           </span>
         </div>
 
