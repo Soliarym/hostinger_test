@@ -3,8 +3,9 @@
 ### ข้อมูลการแก้ไข (Modification Info)
 - **วันและเวลาที่แก้ไข**: 5 ตุลาคม 2026 เวลา 10:12 น. (2026-10-05T10:12:00+07:00)
 - **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
-- **เวอร์ชันของโปรแกรม**: v1.3.0 (Pokemon Catch-all Segments)
-- **ข้อมูลอื่นๆ ที่เกี่ยวข้อง**: Next.js 16 App Router, Dynamic Optional Catch-all Segments (`[[...slug]]`), PokéAPI Official Artwork CDN, Tailwind CSS
+- **เวอร์ชันของโปรแกรม**: v1.3.0 (Pokemon Catch-all Segments & Production Deployed)
+- **ข้อมูลอื่นๆ ที่เกี่ยวข้อง**: Next.js 16 App Router, Dynamic Optional Catch-all Segments (`[[...slug]]`), PokéAPI Official Artwork CDN, Tailwind CSS, Hostinger KVM 2 VPS (`187.77.157.250`, `porpla.online`), PM2 Cluster Mode, Nginx Reverse Proxy
+- **สถานะการ Deploy บน Production VPS**: Deploy สำเร็จสมบูรณ์ 100% บน `porpla.online` ผ่าน PM2 (`nextjs-test`) พร้อมเปิดใช้งานระบบ Catch-all segments จริงแล้ว
 
 ### ปัญหาที่พบ หรือความต้องการที่ต้องปรับปรุง (Issues / Requirements)
 - ผู้ใช้ต้องการสร้างระบบ Next.js Catch-all segments แสดงรายชื่อและรายละเอียดข้อมูลโปเกมอน ครบ 10 ธาตุ ธาตุละ 10 ตัว (รวม 100 ตัว) ตามตัวอย่างภาพ UI Mockup
