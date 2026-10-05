@@ -13,7 +13,7 @@ export default function Navbar() {
             NextJS Test App
           </Link>
           <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
-            v1.2.0
+            v1.3.0
           </span>
         </div>
 
@@ -21,6 +21,9 @@ export default function Navbar() {
         <nav className="flex items-center space-x-6 text-sm font-medium">
           <Link href="/" className="text-slate-300 hover:text-white transition">
             Home
+          </Link>
+          <Link href="/pokemon_list" className="text-emerald-400 hover:text-emerald-300 font-semibold transition flex items-center gap-1">
+            <span>⚡</span> Pokemon
           </Link>
           <Link href="/products" className="text-slate-300 hover:text-white transition">
             Products

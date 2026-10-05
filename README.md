@@ -1,6 +1,99 @@
 # ประวัติการเปลี่ยนแปลงระบบ (System Changelog)
 
 ### ข้อมูลการแก้ไข (Modification Info)
+- **วันและเวลาที่แก้ไข**: 5 ตุลาคม 2026 เวลา 10:12 น. (2026-10-05T10:12:00+07:00)
+- **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
+- **เวอร์ชันของโปรแกรม**: v1.3.0 (Pokemon Catch-all Segments)
+- **ข้อมูลอื่นๆ ที่เกี่ยวข้อง**: Next.js 16 App Router, Dynamic Optional Catch-all Segments (`[[...slug]]`), PokéAPI Official Artwork CDN, Tailwind CSS
+
+### ปัญหาที่พบ หรือความต้องการที่ต้องปรับปรุง (Issues / Requirements)
+- ผู้ใช้ต้องการสร้างระบบ Next.js Catch-all segments แสดงรายชื่อและรายละเอียดข้อมูลโปเกมอน ครบ 10 ธาตุ ธาตุละ 10 ตัว (รวม 100 ตัว) ตามตัวอย่างภาพ UI Mockup
+- โฟลเดอร์เดิมที่สร้างไว้คือ `...slug` (ไม่มีวงเล็บก้ามปู) ทำให้ Next.js มองเป็น Static path ปกติ ไม่สามารถดักจับ Dynamic URL segment parameters ได้
+
+### วิธีการแก้ไข (Solution)
+1. **ปรับโครงสร้าง Dynamic Routing**: ลบโฟลเดอร์เดิม `...slug` และสร้าง `src/app/pokemon_list/[[...slug]]/page.tsx` เพื่อรองรับ Optional Catch-all Route ทั้งระดับ `/pokemon_list`, `/pokemon_list/[type]` และ `/pokemon_list/[type]/[pokemon]` พร้อมสร้าง Alias ที่ `src/app/pokemon/[[...slug]]/page.tsx`
+2. **สร้างฐานข้อมูลโปเกมอน (`pokemonData.ts`)**: บรรจุข้อมูลโปเกมอน 10 ธาตุ ธาตุละ 10 ตัว (100 ตัว) ประกอบด้วย ไฟ, น้ำ, พืช, ไฟฟ้า, น้ำแข็ง, ต่อสู้, พิษ, พื้นดิน, บิน, พลังจิต พร้อมรายละเอียดชื่อไทย-อังกฤษ, ส่วนสูง, น้ำหนัก, ความสามารถ (Ability) พร้อมคำแปล และรูปภาพ Official Artwork คุณภาพสูง
+3. **พัฒนาหน้า UI Dark Theme ตรงตามแบบ Mockup**:
+   - แถบเมนูด้านซ้าย: แสดงปุ่ม 10 ธาตุ พร้อมไอคอนและสีประจำธาตุ รองรับ Active state ชัดเจน
+   - แถบตรงกลาง: แสดงรายชื่อโปเกมอน 10 ตัวในธาตุที่กำลังเลือก
+   - การ์ดด้านขวา: แถบจำลอง Browser URL Address bar, รูปภาพโปเกมอน Official Artwork, ชื่อหัวการ์ด, ป้ายประเภท, สถิติต่างๆ, และกล่องข้อความคำอธิบาย
+4. **อัปเดตแถบนำทาง Navbar และหน้าแรก**:
+   - เพิ่มเมนู `Pokemon` (`/pokemon_list`) บน `Navbar.tsx`
+   - ปรับเลขเวอร์ชันแสดงผลเป็น `v1.3.0` ทั้งบน Header Navbar และ Home Page Hero Badge
+
+### รายละเอียด Code / Function ส่วนสำคัญที่แก้ไข (Before vs After)
+
+#### 1. `src/app/pokemon_list/[[...slug]]/page.tsx` [NEW]
+- **ก่อนแก้ไข (Before)**:
+```text
+(โฟลเดอร์ src/app/pokemon_list/...slug/page.tsx เป็นไฟล์ว่างเปล่าและชื่อโฟลเดอร์ไม่มีวงเล็บก้ามปู)
+```
+- **หลังแก้ไข (After)**:
+```tsx
+import Link from "next/link";
+import { POKEMON_TYPES, PokemonType, PokemonItem } from "../pokemonData";
+
+interface PageProps {
+  params: Promise<{ slug?: string[] }>;
+}
+
+export default async function PokemonCatchAllPage(props: PageProps) {
+  const resolvedParams = await props.params;
+  const slug = resolvedParams?.slug || [];
+
+  // หา Type และ Pokemon จาก catch-all segments (slug)
+  let activeType = POKEMON_TYPES.find((t) => t.id === "water") || POKEMON_TYPES[0];
+  let activePokemon = activeType.pokemon[0];
+
+  if (slug.length >= 1) {
+    const matchedType = POKEMON_TYPES.find((t) => t.id.toLowerCase() === slug[0].toLowerCase());
+    if (matchedType) activeType = matchedType;
+    activePokemon = activeType.pokemon[0];
+  }
+  if (slug.length >= 2) {
+    const matchedPokemon = activeType.pokemon.find((p) => p.id.toLowerCase() === slug[1].toLowerCase());
+    if (matchedPokemon) activePokemon = matchedPokemon;
+  }
+  // เรนเดอร์ UI คอลัมน์ธาตุ คอลัมน์รายชื่อ และการ์ดข้อมูลตาม Mockup
+...
+```
+
+#### 2. `src/app/components/Navbar.tsx`
+- **ก่อนแก้ไข (Before)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.2.0
+</span>
+...
+<nav className="flex items-center space-x-6 text-sm font-medium">
+  <Link href="/" className="text-slate-300 hover:text-white transition">
+    Home
+  </Link>
+  <Link href="/products" className="text-slate-300 hover:text-white transition">
+    Products
+  </Link>
+```
+- **หลังแก้ไข (After)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.3.0
+</span>
+...
+<nav className="flex items-center space-x-6 text-sm font-medium">
+  <Link href="/" className="text-slate-300 hover:text-white transition">
+    Home
+  </Link>
+  <Link href="/pokemon_list" className="text-emerald-400 hover:text-emerald-300 font-semibold transition flex items-center gap-1">
+    <span>⚡</span> Pokemon
+  </Link>
+  <Link href="/products" className="text-slate-300 hover:text-white transition">
+    Products
+  </Link>
+```
+
+---
+
+### ข้อมูลการแก้ไข (Modification Info)
 - **วันและเวลาที่แก้ไข**: 20 กันยายน 2026 เวลา 13:20 น. (2026-09-20T13:20:00+07:00)
 - **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
 - **เวอร์ชันของโปรแกรม**: v1.2.0 (VPS Deployment Preparation)
