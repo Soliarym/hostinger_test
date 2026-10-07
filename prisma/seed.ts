@@ -153,6 +153,23 @@ async function main() {
   }
   const count = await prisma.product.count();
   console.log(`Successfully seeded ${count} products into SQLite.`);
+
+  // Seed default admin user
+  const adminUser = await prisma.user.upsert({
+    where: { username: "admin" },
+    update: {
+      password: "admin",
+      email: "admin@example.com",
+      role: "admin",
+    },
+    create: {
+      username: "admin",
+      password: "admin",
+      email: "admin@example.com",
+      role: "admin",
+    },
+  });
+  console.log(`Successfully seeded default admin user: ${adminUser.username} (role: ${adminUser.role})`);
 }
 
 main()

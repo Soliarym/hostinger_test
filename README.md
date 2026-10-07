@@ -1,6 +1,422 @@
 # ประวัติการเปลี่ยนแปลงระบบ (System Changelog)
 
 ### ข้อมูลการแก้ไข (Modification Info)
+- **วันและเวลาที่แก้ไข**: 7 ตุลาคม 2026 เวลา 10:30 น. (2026-10-07T10:30:00+07:00)
+- **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
+- **เวอร์ชันของโปรแกรม**: v1.6.0 (Next.js Route Groups `(auth)` & Real Authentication Demo)
+- **ข้อมูลอื่นๆ ที่เกี่ยวข้อง**: Next.js 16 App Router Route Groups `(groupName)`, Shared Auth Layout, Prisma SQLite User model, Auto-fill Default Admin (`admin` / `admin`), Login / Register / Forgot Password, Dynamic Navbar Session
+- **สถานะการ Deploy**: รันและทดสอบบน Local Dev Server (`http://localhost:3000`) เรียบร้อยแล้ว (Build ผ่าน 100% และทดสอบเบราว์เซอร์อัตโนมัติผ่านสมบูรณ์)
+
+### ปัญหาที่พบ หรือความต้องการที่ต้องปรับปรุง (Issues / Requirements)
+- ผู้ใช้ต้องการสร้างโครงสร้าง **Route Group** ใน Next.js ให้ใช้งานได้จริง ประกอบด้วย:
+  1. หน้า **Login** (`/login`)
+  2. หน้า **Register** (`/register`)
+  3. หน้า **Forgot Password** (`/forgot-password` และ `/forgotpassword`)
+  4. สร้าง **Default User**: Username `admin`, Password `admin` สำหรับทดสอบใช้งานได้จริง
+
+### วิธีการแก้ไข (Solution)
+1. **ออกแบบและสร้างโครงสร้าง Route Group `src/app/(auth)/`**:
+   - ใช้หลักการ Route Group ของ Next.js App Router โดยตั้งชื่อโฟลเดอร์ในวงเล็บ `(auth)` ทำให้สามารถจัดกลุ่มและใช้งาน Shared Layout ร่วมกันได้ โดยชื่อโฟลเดอร์จะไม่ถูกนำไปใส่ใน URL บนเบราว์เซอร์
+   - URL จึงคงความกระชับและเป็นมาตรฐาน: `/login`, `/register`, `/forgot-password`
+2. **สร้าง Shared Auth Layout (`src/app/(auth)/layout.tsx`)**:
+   - แสดงกล่องการ์ดโมเดิร์นแบบ Dark Glassmorphism
+   - เพิ่มแถบ Navigation Tabs ให้ผู้ใช้สามารถสลับหน้าไปมาระหว่างเข้าสู่ระบบ, สมัครสมาชิก, และลืมรหัสผ่านได้อย่างลื่นไหล
+   - แสดง Badge อธิบายแนวคิด Route Group และกล่องบอกข้อมูล Default Admin
+3. **ปรับปรุงฐานข้อมูล SQLite ด้วย Prisma**:
+   - เพิ่ม Model `User` ใน `prisma/schema.prisma` (ฟิลด์: id, username, email, password, role, createdAt, updatedAt)
+   - อัปเดต `prisma/seed.ts` ให้ Seed ผู้ใช้เริ่มต้น: username: `admin`, password: `admin`, email: `admin@example.com`, role: `admin`
+   - รันคำสั่ง `prisma db push` และ `prisma db seed` บันทึกลง SQLite `dev.db` สำเร็จ
+4. **สร้าง Real Authentication API Routes**:
+   - `src/app/api/auth/login/route.ts`: ตรวจสอบผู้ใช้และรหัสผ่านจาก DB พร้อมตั้งค่า Cookie Session `auth_user`
+   - `src/app/api/auth/register/route.ts`: ตรวจสอบและลงทะเบียนผู้ใช้ใหม่ลง DB
+   - `src/app/api/auth/forgot-password/route.ts`: ตรวจสอบชื่อผู้ใช้/อีเมล และอัปเดตรหัสผ่านใหม่ลง DB
+   - `src/app/api/auth/me/route.ts`: ดึงข้อมูลผู้ใช้ปัจจุบันจาก Session Cookie
+   - `src/app/api/auth/logout/route.ts`: เคลียร์ Session Cookie เมื่อผู้ใช้กดออกจากระบบ
+5. **สร้างหน้าเพจ UI ให้ใช้งานได้จริง**:
+   - `src/app/(auth)/login/page.tsx`: มีปุ่มด่วน "ใส่ข้อมูล Admin" ช่วย Auto-fill `admin` / `admin` ให้ทดสอบได้ทันที มีการแสดงผลสถานะแจ้งเตือนเมื่อสำเร็จหรือผิดพลาด
+   - `src/app/(auth)/register/page.tsx`: ฟอร์มรับข้อมูล Username, Email, Password, Confirm Password พร้อมการตรวจสอบความถูกต้อง
+   - `src/app/(auth)/forgot-password/page.tsx`: ฟอร์มค้นหาบัญชีและตั้งรหัสผ่านใหม่
+   - `src/app/(auth)/forgotpassword/page.tsx`: สร้าง Alias Route รองรับ URL ที่ไม่มีขีดกลาง
+6. **ปรับปรุง Navbar และหน้าแรก**:
+   - อัปเดต Version Badge เป็น `v1.6.0`
+   - ปรับปรุง Navbar ให้ตรวจจับสถานะการเข้าสู่ระบบแบบ Real-time แสดงชื่อผู้ใช้ `👤 admin`, Badge `ADMIN` และปุ่ม "ออกจากระบบ" หรือปุ่ม "เข้าสู่ระบบ/สมัครสมาชิก"
+   - เพิ่ม Section อธิบาย Route Group Architecture บนหน้าแรก พร้อมตารางเปรียบเทียบ Directory vs URL
+7. **ทดสอบระบบ**:
+   - รัน `npm run build` ผ่าน 100% ไม่มีข้อผิดพลาด
+   - ทดสอบผ่าน Browser Subagent ทั้งการล็อกอินด้วย `admin`/`admin`, การสลับหน้า, การแสดงผลบน Navbar และการทดสอบ Route ต่างๆ ผ่านครบถ้วน
+
+### รายละเอียด Code / Function ส่วนสำคัญที่แก้ไข (Before vs After)
+
+#### 1. `prisma/schema.prisma`
+- **ก่อนแก้ไข (Before)**:
+```prisma
+model Product {
+  id             Int      @id @default(autoincrement())
+  name           String
+  price          Float
+  description    String
+  category       String
+  inStock        Boolean  @default(true)
+  specifications String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+```
+- **หลังแก้ไข (After)**:
+```prisma
+model Product {
+  id             Int      @id @default(autoincrement())
+  name           String
+  price          Float
+  description    String
+  category       String
+  inStock        Boolean  @default(true)
+  specifications String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+```
+
+#### 2. `src/app/(auth)/layout.tsx` [NEW]
+- **ก่อนแก้ไข (Before)**:
+```text
+(ยังไม่มีไฟล์ src/app/(auth)/layout.tsx)
+```
+- **หลังแก้ไข (After)**:
+```typescript
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React from "react";
+
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const navItems = [
+    { href: "/login", label: "เข้าสู่ระบบ", icon: "🔑" },
+    { href: "/register", label: "สมัครสมาชิก", icon: "📝" },
+    { href: "/forgot-password", label: "ลืมรหัสผ่าน", icon: "🔒" },
+  ];
+  return (
+    <div className="flex-1 flex flex-col items-center justify-center py-12 px-4 ...">
+      {/* Route Group Education Banner & Tabs */}
+      ...
+      {children}
+    </div>
+  );
+}
+```
+
+#### 3. `src/app/(auth)/login/page.tsx` [NEW]
+- **ก่อนแก้ไข (Before)**:
+```text
+(ยังไม่มีไฟล์ src/app/(auth)/login/page.tsx)
+```
+- **หลังแก้ไข (After)**:
+```typescript
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
+export default function LoginPage() {
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  // Quick fill Admin account
+  const handleAutofillAdmin = () => {
+    setIdentifier("admin");
+    setPassword("admin");
+  };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ identifier, password }),
+    });
+    ...
+  };
+  ...
+}
+```
+
+#### 4. `src/app/components/Navbar.tsx`
+- **ก่อนแก้ไข (Before)**:
+```typescript
+<div className="flex items-center gap-2.5">
+  <Link href="/" ...>NextJS Test App</Link>
+  <span className="... bg-indigo-500/15 text-indigo-300 ...">
+    v1.5.0
+  </span>
+</div>
+...
+```
+- **หลังแก้ไข (After)**:
+```typescript
+// Client-side authentication sync with version v1.6.0
+<div className="flex items-center gap-2.5">
+  <Link href="/" ...>NextJS Test App</Link>
+  <span className="... bg-indigo-500/15 text-indigo-300 ...">
+    v1.6.0
+  </span>
+</div>
+...
+{user ? (
+  <div className="flex items-center gap-2 bg-slate-900 border ...">
+    <span>👤 {user.username}</span>
+    <span className="uppercase text-[10px] font-mono ...">{user.role}</span>
+    <button onClick={handleLogout} className="text-rose-400 ...">ออกจากระบบ</button>
+  </div>
+) : (
+  <div className="flex items-center gap-2">
+    <Link href="/login" ...>เข้าสู่ระบบ</Link>
+    <Link href="/register" ...>สมัครสมาชิก</Link>
+  </div>
+)}
+```
+
+---
+
+### ข้อมูลการแก้ไข (Modification Info)
+- **วันและเวลาที่แก้ไข**: 5 ตุลาคม 2026 เวลา 16:08 น. (2026-10-05T16:08:00+07:00)
+- **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
+- **เวอร์ชันของโปรแกรม**: v1.5.0 (Next.js Private Folders `_lib` Demo)
+- **ข้อมูลอื่นๆ ที่เกี่ยวข้อง**: Next.js 16 App Router Private Folders (`_folderName`), Inaccessible URL Routes (Unroutable), Internal Date Utilities (`format-date.ts`)
+- **สถานะการ Deploy**: รันและทดสอบบน Local Dev Server (`http://localhost:3000`) เรียบร้อยแล้ว (ยังไม่ Deploy ขึ้น Production VPS ตามความประสงค์ของผู้ใช้)
+
+### ปัญหาที่พบ หรือความต้องการที่ต้องปรับปรุง (Issues / Requirements)
+- ผู้ใช้ต้องการทดลองสร้างและทดสอบฟีเจอร์ Private Folder ใน Next.js App Router (ตามภาพโฟลเดอร์ `_lib` ที่มี `format-date.ts` และ `page.tsx`)
+- ต้องการพิสูจน์การทำงานของ Private Folder ว่าจะไม่ถูก Route ออกไปเป็น URL สาธารณะ (แม้จะมี `page.tsx` อยู่ข้างในก็ตาม) แต่ยังคงสามารถ Import ฟังก์ชันภายในไปใช้งานร่วมกับหน้าอื่นได้ตามปกติ
+
+### วิธีการแก้ไข (Solution)
+1. **สร้าง Private Folder `src/app/_lib/`**:
+   - สร้าง `src/app/_lib/format-date.ts` บรรจุฟังก์ชันจัดรูปแบบวันเวลาภาษาไทย `formatThaiDate()` และ `getPrivateFolderInfo()`
+   - สร้าง `src/app/_lib/page.tsx` เพื่อทดสอบพิสูจน์ว่า URL `/_lib` จะไม่ถูก Route ออกสู่ภายนอก
+2. **ผสานเข้ากับหน้าแรก (`src/app/page.tsx`)**:
+   - นำเข้าฟังก์ชันจาก `@/app/_lib/format-date` มาแสดงผลวันเวลาปัจจุบันภาษาไทยแบบเรียลไทม์
+   - เพิ่มการ์ด Private Folder Showcase พร้อมปุ่มลิงก์ทดสอบเปิด `/_lib` ซึ่งจะนำผู้ใช้ไปยังหน้า 404 Not Found ของระบบโดยอัตโนมัติ
+3. **อัปเดตเวอร์ชัน UI (`v1.5.0`)**:
+   - ปรับ Version Badge ใน `Navbar.tsx` และหน้า `page.tsx` เป็น `v1.5.0`
+4. **ทดสอบระบบ**:
+   - ทดสอบเรียกดู `http://localhost:3000/_lib` ได้ HTTP Status Code 404
+   - ทดสอบหน้าแรก `http://localhost:3000/` แสดงผลวันเวลาภาษาไทยที่แปลงผ่าน `formatThaiDate()` ถูกต้องสมบูรณ์
+   - รัน `npm run build` ผ่าน 100% ปราศจาก error
+
+### รายละเอียด Code / Function ส่วนสำคัญที่แก้ไข (Before vs After)
+
+#### 1. `src/app/_lib/format-date.ts` [NEW]
+- **ก่อนแก้ไข (Before)**:
+```text
+(ยังไม่มีไฟล์ src/app/_lib/format-date.ts ในระบบ)
+```
+- **หลังแก้ไข (After)**:
+```typescript
+export function formatThaiDate(dateInput: Date | string | number = new Date()): string {
+  const date = typeof dateInput === "object" ? dateInput : new Date(dateInput);
+  const thaiMonths = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+  ];
+  const thaiDays = [
+    "วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"
+  ];
+  const dayOfWeek = thaiDays[date.getDay()];
+  const day = date.getDate();
+  const month = thaiMonths[date.getMonth()];
+  const year = date.getFullYear() + 543;
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  return `${dayOfWeek}ที่ ${day} ${month} พ.ศ. ${year} เวลา ${hours}:${minutes} น.`;
+}
+```
+
+#### 2. `src/app/_lib/page.tsx` [NEW]
+- **ก่อนแก้ไข (Before)**:
+```text
+(ยังไม่มีไฟล์ src/app/_lib/page.tsx ในระบบ)
+```
+- **หลังแก้ไข (After)**:
+```tsx
+export default function PrivateLibPage() {
+  return (
+    <div style={{ padding: "40px", fontFamily: "sans-serif", textAlign: "center" }}>
+      <h1>🔒 Secret Private Page</h1>
+      <p>Next.js จะไม่มีทาง Route มาที่หน้านี้เด็ดขาด (จะติด 404 เสมอ)</p>
+    </div>
+  );
+}
+```
+
+---
+
+### ข้อมูลการแก้ไข (Modification Info)
+- **วันและเวลาที่แก้ไข**: 5 ตุลาคม 2026 เวลา 12:02 น. (2026-10-05T12:02:00+07:00)
+- **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
+- **เวอร์ชันของโปรแกรม**: v1.4.1 (Centralized Global 404 Not Found Page)
+- **ข้อมูลอื่นๆ ที่เกี่ยวข้อง**: Next.js 16 App Router, Consolidate Not Found Routes to Single Root `app/not-found.tsx`, Remove Section Scoped Not Found Pages
+- **สถานะการ Deploy**: รันและทดสอบบน Local Dev Server (`http://localhost:3000`) เรียบร้อยแล้ว (ยังไม่ Deploy ขึ้น Production VPS ตามความประสงค์ของผู้ใช้)
+
+### ปัญหาที่พบ หรือความต้องการที่ต้องปรับปรุง (Issues / Requirements)
+- เดิมมีหน้า `not-found.tsx` เฉพาะหมวดอยู่ใน `src/app/posts/not-found.tsx` แยกต่างหากจาก Root
+- ผู้ใช้ต้องการเอา `not-found.tsx` ในแต่ละ section ย่อยออกทั้งหมด แล้วให้ใช้หน้า `src/app/not-found.tsx` จุดเดียวคลุมทั้งเว็บไซต์ เพื่อให้มีความเป็นเอกภาพและจัดการง่าย
+
+### วิธีการแก้ไข (Solution)
+1. **ลบ Section Not Found Page**:
+   - ลบไฟล์ `src/app/posts/not-found.tsx` ออกจากระบบ
+2. **รวมศูนย์ที่ Root Not Found (`src/app/not-found.tsx`)**:
+   - ทุกคำขอที่ผิดพลาด (URL 404 หรือการเรียก `notFound()` ในหมวดต่างๆ เช่น `/posts/...`, `/pokemon_list/...`) จะถูกส่งต่อมาแสดงผลที่หน้าจอ Global Not Found ส่วนกลางจุดเดียว
+   - แสดงผลคำแนะนำ Animated Bounce: `⬆️ ใส่ link ผิด? แนะนำให้กดเลือกเมนูจากแถบ Navbar ด้านบน ชัวร์สุดครับ!`
+   - มีการ์ดทางลัดครอบคลุม 4 โซนหลัก: หน้าแรก (`/`), โปเกมอน (`/pokemon_list`), สินค้า (`/products`), และบทความ (`/posts`)
+3. **อัปเดตเวอร์ชัน UI (`v1.4.1`)**:
+   - ปรับ Version Badge ใน `Navbar.tsx` และป้าย Release ใน `page.tsx` เป็น `v1.4.1`
+4. **ทดสอบระบบ**:
+   - ทดสอบบน Local Dev Server (`http://localhost:3000/posts/unknown`) ยืนยันว่าหน้าแสดงผลด้วย Root `not-found.tsx` สมบูรณ์
+   - รัน `npm run build` ผ่าน 100% ปราศจาก error
+
+### รายละเอียด Code / Function ส่วนสำคัญที่แก้ไข (Before vs After)
+
+#### 1. การจัดการโครงสร้างไฟล์ Not Found (File Structure)
+- **ก่อนแก้ไข (Before)**:
+```text
+src/app/
+├── not-found.tsx          (Global 404)
+└── posts/
+    └── not-found.tsx      (Scoped 404 สำหรับ posts โดยเฉพาะ)
+```
+- **หลังแก้ไข (After)**:
+```text
+src/app/
+└── not-found.tsx          (Global 404 จุดเดียวคลุมทั้งเว็บ ทุก section ย่อยวิ่งมาที่นี่)
+```
+
+#### 2. `src/app/components/Navbar.tsx`
+- **ก่อนแก้ไข (Before)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.4.0
+</span>
+```
+- **หลังแก้ไข (After)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.4.1
+</span>
+```
+
+---
+
+### ข้อมูลการแก้ไข (Modification Info)
+- **วันและเวลาที่แก้ไข**: 5 ตุลาคม 2026 เวลา 11:52 น. (2026-10-05T11:52:00+07:00)
+- **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
+- **เวอร์ชันของโปรแกรม**: v1.4.0 (Custom 404 Not Found Page)
+- **ข้อมูลอื่นๆ ที่เกี่ยวข้อง**: Next.js 16 App Router, Global `not-found.tsx`, Scoped `posts/not-found.tsx`, Tailwind CSS Dark Glassmorphism, Animated UI Cues
+- **สถานะการ Deploy**: รันและทดสอบบน Local Dev Server พร้อมใช้งาน (ยังไม่ Deploy ขึ้น Production VPS ตามความประสงค์ของผู้ใช้)
+
+### ปัญหาที่พบ หรือความต้องการที่ต้องปรับปรุง (Issues / Requirements)
+- เดิมระบบใช้หน้า Error 404 แบบพื้นฐานของ Next.js ซึ่งไม่มีลูกเล่น ดีไซน์ไม่ตรงกับธีมมืดของเว็บ และไม่มีข้อความแนะนำผู้ใช้
+- ผู้ใช้ต้องการสร้างหน้า `not-found.tsx` สวยๆ กรณีที่มีผู้ใช้งานพิมพ์หรือเข้าผ่าน URL ลิงก์ที่ผิด พร้อมใส่ข้อความแนะนำชัดเจนว่าให้ไปกดเลือกที่ Navbar ด้านบน ชัวร์สุด
+- ให้รันบน Local Dev ให้ทดสอบก่อน ยังไม่ Deploy จริงขึ้น Production
+
+### วิธีการแก้ไข (Solution)
+1. **สร้าง Global 404 Page (`src/app/not-found.tsx`)**:
+   - ออกแบบในสไตล์ Modern Dark Glassmorphism ผสมผสาน Gradient สีม่วง-ชมพู-อินดิโก
+   - เพิ่ม Animated Direction Indicator ชี้เป้าด้านบน: `⬆️ ใส่ link ผิด? แนะนำให้กดเลือกเมนูจากแถบ Navbar ด้านบน ชัวร์สุดครับ!`
+   - ตัวเลข 404 ขนาดใหญ่คมชัดพร้อมเส้นแสงเรืองแสง
+   - กล่องเคล็ดลับการใช้งาน แนะนำให้คลิกผ่าน Navigation Bar
+   - Grid การ์ดปุ่มทางลัดไปยังหน้าหลัก (Home), หน้าสำรวจ Pokemon (10 ธาตุ 100 ตัว), หน้ารายการสินค้า (Products), และหน้าบทความ (Posts)
+   - ปุ่มลัด "กลับสู่หน้าหลักที่ปลอดภัย"
+2. **สร้าง Scoped 404 Page (`src/app/posts/not-found.tsx`)**:
+   - จัดทำหน้าแจ้งเตือนเมื่อไม่พบบทความ พร้อมข้อความแนะนำให้เลือกผ่าน Navbar ด้านบนเช่นเดียวกัน
+3. **อัปเดตหมายเลขเวอร์ชัน UI (`v1.4.0`)**:
+   - ปรับ Version Badge ใน `Navbar.tsx` และป้าย Release ใน `page.tsx` เป็น `v1.4.0`
+4. **ทดสอบระบบบน Local Server**:
+   - รันคำสั่ง `npm run build` ผ่านสมบูรณ์ และทดสอบเรียกดูหน้า 404 บน Local Dev (`http://localhost:3000/wrong-url`)
+
+### รายละเอียด Code / Function ส่วนสำคัญที่แก้ไข (Before vs After)
+
+#### 1. `src/app/not-found.tsx` [NEW]
+- **ก่อนแก้ไข (Before)**:
+```text
+(ยังไม่มีไฟล์ src/app/not-found.tsx ในระบบ โดย Next.js แสดงผลหน้า default 404 พื้นฐาน)
+```
+- **หลังแก้ไข (After)**:
+```tsx
+import Link from "next/link";
+
+export default function NotFound() {
+  return (
+    <main className="min-h-[calc(100vh-65px)] flex flex-col items-center justify-center bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 px-4 py-12 relative overflow-hidden">
+      {/* Background Ambient Glow */}
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Animated Direction Indicator to Navbar */}
+      <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs sm:text-sm font-semibold animate-bounce shadow-lg shadow-indigo-500/10">
+        <span className="text-base">⬆️</span>
+        <span>ใส่ link ผิด? แนะนำให้กดเลือกเมนูจากแถบ Navbar ด้านบน ชัวร์สุดครับ!</span>
+      </div>
+
+      <div className="relative mb-2">
+        <span className="text-8xl sm:text-9xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 drop-shadow-2xl select-none">
+          404
+        </span>
+      </div>
+
+      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+        ไม่พบหน้าที่คุณกำลังค้นหา (Page Not Found)
+      </h1>
+...
+```
+
+#### 2. `src/app/posts/not-found.tsx` [NEW]
+- **ก่อนแก้ไข (Before)**:
+```text
+(ไฟล์ src/app/posts/not-found.tsx ว่างเปล่า)
+```
+- **หลังแก้ไข (After)**:
+```tsx
+import Link from "next/link";
+
+export default function PostsNotFound() {
+  return (
+    <main className="min-h-[calc(100vh-65px)] flex flex-col items-center justify-center bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100 px-4 py-12 relative overflow-hidden">
+      <div className="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/15 border border-purple-500/30 text-purple-300 text-xs sm:text-sm font-semibold animate-bounce shadow-lg shadow-purple-500/10">
+        <span className="text-base">⬆️</span>
+        <span>ใส่ link ผิด? แนะนำให้ไปกดเลือกที่ Navbar ด้านบน ชัวร์สุดครับ!</span>
+      </div>
+      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">
+        ไม่พบบทความที่คุณกำลังตามหา
+      </h1>
+...
+```
+
+#### 3. `src/app/components/Navbar.tsx`
+- **ก่อนแก้ไข (Before)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.3.0
+</span>
+```
+- **หลังแก้ไข (After)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.4.0
+</span>
+```
+
+---
+
+### ข้อมูลการแก้ไข (Modification Info)
 - **วันและเวลาที่แก้ไข**: 5 ตุลาคม 2026 เวลา 10:12 น. (2026-10-05T10:12:00+07:00)
 - **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
 - **เวอร์ชันของโปรแกรม**: v1.3.0 (Pokemon Catch-all Segments & Production Deployed)
