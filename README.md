@@ -1,6 +1,141 @@
 # ประวัติการเปลี่ยนแปลงระบบ (System Changelog)
 
 ### ข้อมูลการแก้ไข (Modification Info)
+- **วันและเวลาที่แก้ไข**: 14 ตุลาคม 2026 เวลา 13:50 น. (2026-10-14T13:50:00+07:00)
+- **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
+- **เวอร์ชันของโปรแกรม**: v1.7.0 (Next.js Nested Layout `products/[id]/layout.tsx` & Featured Product Spotlight)
+- **ข้อมูลอื่นๆ ที่เกี่ยวข้อง**: Next.js 16 App Router Nested Layouts, Server Components, Persistent Layout UI, Dynamic Route Params `Promise<{ id: string }>`, Prisma SQLite Data Integration, Dark Glassmorphism Design System
+- **สถานะการ Deploy**: รันและทดสอบบน Local Dev Server (`http://localhost:3000`) เรียบร้อยแล้ว (Build ผ่าน 100% พร้อมบันทึกภาพถ่ายการทำงานผ่าน Browser Subagent)
+
+### ปัญหาที่พบ หรือความต้องการที่ต้องปรับปรุง (Issues / Requirements)
+- ผู้ใช้ต้องการสร้างโครงสร้าง **Nested Layout** ใน Next.js App Router ภายใต้เส้นทาง `src/app/products/[id]/layout.tsx` ของสินค้าแต่ละชิ้น
+- เพิ่มเซกชัน **Featured Product (สินค้าแนะนำ)** ให้มีความโดดเด่นสะดุดตา ("ขอเด่นๆ")
+- กำหนดตำแหน่งให้อยู่ถัดลงมาจาก Menu Bar / Navbar ปกติทันทีก่อนเข้าสู่เนื้อหาหลักของสินค้าแต่ละรายการ
+
+### วิธีการแก้ไข (Solution)
+1. **สร้าง Nested Server Layout (`src/app/products/[id]/layout.tsx`)**:
+   - ใช้สถาปัตยกรรม Nested Layout ของ Next.js App Router เพื่อห่อหุ้มหน้ารายละเอียดสินค้า (`src/app/products/[id]/page.tsx`) โดยซ้อนอยู่ภายใต้ Root Layout (`src/app/layout.tsx`)
+   - รองรับ Next.js 16/15 Params แบบ Asynchronous `Promise<{ id: string }>`
+   - เชื่อมต่อและดึงข้อมูลสินค้าจริงจากฐานข้อมูล SQLite ผ่าน `getProducts()`
+2. **ออกแบบและพัฒนา Featured Product Spotlight Banner ระดับพรีเมียม**:
+   - วางตำแหน่งอยู่ด้านบนสุด ถัดลงมาจาก Sticky Header / Menu Bar ทันที
+   - ออกแบบด้วย Dark Glassmorphism, เอฟเฟกต์แสงนีออน Ambient Glow โทน Indigo-Purple-Amber
+   - มี Badge `⭐ FEATURED PRODUCT SPOTLIGHT`, `ดีลเด็ดประจำวัน` และ `🧩 Nested Layout: app/products/[id]/layout.tsx`
+   - ระบบคัดเลือกสินค้าแนะนำอัตโนมัติ โดยเลือกสินค้าเด่นที่ไม่ซ้ำกับชิ้นที่ผู้ใช้กำลังเปิดชมอยู่ พร้อมแสดงแท็กหมวดหมู่ ราคาโปรโมชั่นพิเศษ และปุ่ม CTA `ดูสินค้านี้เลย ➔`
+   - เพิ่มแถบ Quick-Pick ชิปเลือกดูสินค้าแนะนำยอดนิยมอื่นๆ (สว่านไร้สาย, เครื่องเจียร์ไฟฟ้า, ตลับเมตรดิจิทัล, ค้อนเหล็กหุน) ให้คลิกเปลี่ยนไปดูชิ้นอื่นได้ทันที
+3. **ปรับแต่งระยะห่างใน `src/app/products/[id]/page.tsx`**:
+   - ปรับ padding ส่วนบนให้ต่อเนื่องและกลมกลืนกับ Featured Layout แถบบนอย่างไร้รอยต่อ
+4. **อัปเดตเวอร์ชันและตรวจสอบรอบด้าน**:
+   - ปรับเลขเวอร์ชันเป็น `v1.7.0` ใน `src/app/components/Navbar.tsx` และ `src/app/page.tsx`
+   - รันคำสั่ง `npm run build` ตรวจสอบ Type และ Route ทั้งหมดผ่าน 100%
+   - ทดสอบผ่าน Browser Subagent ทั้งการเปิดชมสินค้า ID #1 และคลิกเปลี่ยนไปยัง ID #2 ยืนยันว่า Featured Layout แสดงผลคงอยู่ต่อเนื่องและปรับเปลี่ยนสินค้าแนะนำได้อย่างถูกต้อง
+
+### รายละเอียด Code / Function ส่วนสำคัญที่แก้ไข (Before vs After)
+
+#### 1. `src/app/products/[id]/layout.tsx`
+- **ก่อนแก้ไข (Before)**:
+```tsx
+// ไฟล์ว่างเปล่า (0 Bytes) ยังไม่มีการประกาศคอมโพเนนต์
+```
+- **หลังแก้ไข (After)**:
+```tsx
+import type { Metadata } from "next";
+import Link from "next/link";
+import { getProducts } from "../data";
+
+export const metadata: Metadata = {
+  title: "รายละเอียดสินค้า | NextJS Test App",
+  description: "Next.js Nested Layout with Featured Products showcase",
+};
+
+type Props = {
+  children: React.ReactNode;
+  params: Promise<{ id: string }>;
+};
+
+export default async function ProductDetailNestedLayout({
+  children,
+  params,
+}: Props) {
+  const { id } = await params;
+  const currentId = parseInt(id, 10);
+  const products = await getProducts();
+
+  // Pick featured items that are different from the currently viewed product
+  const otherProducts = products.filter((p) => p.id !== currentId);
+  const featuredProduct = otherProducts.length > 0 ? otherProducts[0] : products[0];
+  const quickPicks = otherProducts.slice(1, 4);
+
+  return (
+    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
+      {/* ⭐ FEATURED PRODUCT SECTION (Nested Layout Header ใต้ Navbar ทันที) */}
+      <section className="relative w-full border-b border-indigo-500/20 bg-gradient-to-b from-slate-900/90 via-slate-950/95 to-slate-950 backdrop-blur-xl shadow-2xl overflow-hidden">
+        {/* ...Ambient Glow & Nested Layout Badge... */}
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3 text-xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 text-amber-300 font-bold uppercase text-[11px]">
+              ⭐ FEATURED PRODUCT SPOTLIGHT
+            </span>
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/25 text-indigo-300 text-[11px] font-mono">
+              <span className="text-indigo-400 font-bold">🧩 Nested Layout:</span>
+              <span>app/products/[id]/layout.tsx</span>
+            </div>
+          </div>
+          {/* Main Featured Showcase Card */}
+          {featuredProduct && (
+            <div className="relative rounded-2xl bg-gradient-to-r from-indigo-950/70 via-slate-900/80 to-purple-950/70 border border-indigo-500/30 p-4 sm:p-5 shadow-xl">
+              {/* Product Info, Price, and CTA Link to /products/${featuredProduct.id} */}
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* PAGE CONTENT ({children}) */}
+      <div className="flex-1">
+        {children}
+      </div>
+    </div>
+  );
+}
+```
+
+#### 2. `src/app/components/Navbar.tsx`
+- **ก่อนแก้ไข (Before)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.6.0
+</span>
+```
+- **หลังแก้ไข (After)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.7.0
+</span>
+```
+
+#### 3. `src/app/page.tsx`
+- **ก่อนแก้ไข (Before)**:
+```tsx
+<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold">
+  <span>🚀 Release</span>
+  <span className="font-mono">v1.6.0</span>
+  <span className="text-slate-500">•</span>
+  <span className="text-emerald-400">Route Groups (auth) & Real Authentication</span>
+</div>
+```
+- **หลังแก้ไข (After)**:
+```tsx
+<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold">
+  <span>🚀 Release</span>
+  <span className="font-mono">v1.7.0</span>
+  <span className="text-slate-500">•</span>
+  <span className="text-emerald-400">Nested Layouts & Featured Products</span>
+</div>
+```
+
+---
+
+### ข้อมูลการแก้ไข (Modification Info)
 - **วันและเวลาที่แก้ไข**: 7 ตุลาคม 2026 เวลา 10:30 น. (2026-10-07T10:30:00+07:00)
 - **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
 - **เวอร์ชันของโปรแกรม**: v1.6.0 (Next.js Route Groups `(auth)` & Real Authentication Demo)

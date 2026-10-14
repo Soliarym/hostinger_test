@@ -40,7 +40,7 @@ export default async function ProductDetailPage({ params }: Props) {
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-3xl" />
       </div>
 
-      <main className="flex-1 max-w-4xl mx-auto px-6 py-12 w-full space-y-8">
+      <main className="flex-1 max-w-4xl mx-auto px-6 py-8 sm:py-10 w-full space-y-8">
         {/* Breadcrumb / Back link */}
         <div className="flex items-center space-x-2 text-sm text-slate-400">
           <Link href="/products" className="hover:text-indigo-400 transition-colors">
