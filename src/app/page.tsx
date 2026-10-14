@@ -20,7 +20,7 @@ export default function Home() {
           {/* Release Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold">
             <span>🚀 Release</span>
-            <span className="font-mono">v1.7.0</span>
+            <span className="font-mono">v1.7.1</span>
             <span className="text-slate-500">•</span>
             <span className="text-emerald-400">Nested Layouts & Featured Products</span>
           </div>

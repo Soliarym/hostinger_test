@@ -1,6 +1,55 @@
 # ประวัติการเปลี่ยนแปลงระบบ (System Changelog)
 
 ### ข้อมูลการแก้ไข (Modification Info)
+- **วันและเวลาที่แก้ไข**: 14 ตุลาคม 2026 เวลา 14:10 น. (2026-10-14T14:10:00+07:00)
+- **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
+- **เวอร์ชันของโปรแกรม**: v1.7.1 (Remove Redundant Route & Consolidate Catch-all Segments to `pokemon_list`)
+- **ข้อมูลอื่นๆ ที่เกี่ยวข้อง**: Clean Architecture, Next.js Catch-all Segments Optimization, Zero-Redundancy Routing
+- **สถานะการ Deploy**: รันและทดสอบบน Local Dev Server (`http://localhost:3000/pokemon_list`) เรียบร้อยแล้ว (Build ผ่าน 100%)
+
+### ปัญหาที่พบ หรือความต้องการที่ต้องปรับปรุง (Issues / Requirements)
+- ผู้ใช้สอบถามและต้องการตัดโฟลเดอร์ `pokemon` ออก เนื่องจากเป็นเพียง route alias ที่ซ้ำซ้อนกับ `pokemon_list`
+- รวมศูนย์เส้นทาง Catch-all Segment ของ Pokemon ไว้ที่ `/pokemon_list/[[...slug]]` เพียงแห่งเดียวเพื่อความกระชับและไม่สับสน
+
+### วิธีการแก้ไข (Solution)
+1. **ลบโฟลเดอร์ `src/app/pokemon` ออกจากระบบ**:
+   - ลบไฟล์ `src/app/pokemon/[[...slug]]/page.tsx` และไดเรกทอรี `pokemon`
+   - คงเส้นทางหลักที่แท้จริงคือ `src/app/pokemon_list/[[...slug]]/page.tsx` และ `pokemonData.ts` ไว้อย่างสมบูรณ์
+2. **อัปเดตเวอร์ชันเป็น `v1.7.1`**:
+   - อัปเดต Version Badge ใน `src/app/(media)/components/Navbar.tsx` เป็น `v1.7.1`
+   - อัปเดต Version Badge ใน `src/app/page.tsx` เป็น `v1.7.1`
+3. **ทดสอบระบบ**:
+   - รัน `npm run build` ผ่าน 100% โดยเส้นทาง `/pokemon/[[...slug]]` ถูกตัดออก และ `/pokemon_list/[[...slug]]` ยังคงทำงานได้อย่างสมบูรณ์
+
+### รายละเอียด Code / Function ส่วนสำคัญที่แก้ไข (Before vs After)
+
+#### 1. `src/app/pokemon/[[...slug]]/page.tsx`
+- **ก่อนแก้ไข (Before)**:
+```tsx
+export { default, metadata } from "../../pokemon_list/[[...slug]]/page";
+```
+- **หลังแก้ไข (After)**:
+```text
+(ลบไฟล์และไดเรกทอรี src/app/pokemon ออกจากโปรเจกต์อย่างสมบูรณ์)
+```
+
+#### 2. `src/app/(media)/components/Navbar.tsx`
+- **ก่อนแก้ไข (Before)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.7.0
+</span>
+```
+- **หลังแก้ไข (After)**:
+```tsx
+<span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+  v1.7.1
+</span>
+```
+
+---
+
+### ข้อมูลการแก้ไข (Modification Info)
 - **วันและเวลาที่แก้ไข**: 14 ตุลาคม 2026 เวลา 13:50 น. (2026-10-14T13:50:00+07:00)
 - **ชื่อ Agent และ โมเดล AI ที่ใช้งาน**: Antigravity (Gemini 3.8 Flash)
 - **เวอร์ชันของโปรแกรม**: v1.7.0 (Next.js Nested Layout `products/[id]/layout.tsx` & Featured Product Spotlight)
